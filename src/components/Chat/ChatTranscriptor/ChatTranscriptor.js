@@ -57,8 +57,8 @@ export default class ChatTranscriptor extends PureComponent {
     transcript: PT.array,
     typingParticipants: PT.array.isRequired,
     contactStatus: PT.string.isRequired,
-    loadPreviousTranscript: PT.func.isRequired
-
+    loadPreviousTranscript: PT.func.isRequired,
+    apiGatewayEndpoint:PT.string.isRequired,
   };
 
   loadTranscript = () => {
@@ -86,7 +86,8 @@ export default class ChatTranscriptor extends PureComponent {
     if (config.render) {
       content = config.render({
         key: key,
-        messageDetails: itemDetails
+        messageDetails: itemDetails,
+        apiGatewayEndpoint: this.props.apiGatewayEndpoint
       });
     }
 
@@ -119,6 +120,7 @@ export default class ChatTranscriptor extends PureComponent {
       content = config.render({
         key: key,
         messageDetails: itemDetails,
+        apiGatewayEndpoint: this.props.apiGatewayEndpoint,
         ...additionalProps
       });
     }

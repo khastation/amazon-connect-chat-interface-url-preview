@@ -96,6 +96,7 @@ class ChatContainer extends Component {
     this.setState({ status: "Initiating" });
 
     try {
+      const apiGatewayEndpoint = input.apiGatewayEndpoint;
       const chatDetails = await initiateChat(input);
       const chatSession = await this.openChatSession(chatDetails, input.name, input.region, input.stage);
 
@@ -104,7 +105,8 @@ class ChatContainer extends Component {
         chatSession: chatSession,
         composerConfig: {
           attachmentsEnabled: (input.featurePermissions && input.featurePermissions[CHAT_FEATURE_TYPES.ATTACHMENTS]) || (chatDetails.featurePermissions && chatDetails.featurePermissions[CHAT_FEATURE_TYPES.ATTACHMENTS])
-        }
+        },
+        apiGatewayEndpoint: apiGatewayEndpoint
       });
       success && success(chatSession);
     } catch (error) {
@@ -149,7 +151,7 @@ class ChatContainer extends Component {
         </Wrapper>
       );
     }
-    return <Chat chatSession={this.state.chatSession} composerConfig={this.state.composerConfig} onEnded={this.resetState} {...this.props} />;
+    return <Chat chatSession={this.state.chatSession} composerConfig={this.state.composerConfig} onEnded={this.resetState} apiGatewayEndpoint={this.state.apiGatewayEndpoint} {...this.props} />;
   }
 }
 

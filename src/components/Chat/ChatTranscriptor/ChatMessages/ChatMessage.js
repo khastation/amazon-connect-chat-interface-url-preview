@@ -93,6 +93,38 @@ TransportErrorMessage.RetryButton = styled.a`
   margin-left: ${({ theme }) => theme.spacing.micro};
 `;
 
+const PreviewTitle = styled.a`
+  font-size: ${({ theme }) => theme.fontsSize.system};
+  font-family: ${({ theme }) => theme.fonts.bold};
+  font-weight: bold;
+  padding: ${({ theme }) => theme.spacing.small};
+  padding-bottom: ${({ theme }) => theme.spacing.micro};
+  display: block;
+`;
+
+const PreviewDescription = styled.div`
+  padding: ${({ theme }) => theme.spacing.small};
+  padding-top: ${({ theme }) => theme.spacing.micro};
+  padding-bottom: ${({ theme }) => theme.spacing.micro};
+  display: block;
+`;
+
+const PreviewBody = styled.div`
+  background-color: ${({ theme }) => theme.palette.white};
+`;
+
+const PreviewUrl = styled.a`
+  padding: ${({ theme }) => theme.spacing.small};
+  padding-top: ${({ theme }) => theme.spacing.micro};
+  display: block;
+`;
+
+const PreviewImage = styled.img`
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-height: 100px;  
+`;
 
 export class ParticipantMessage extends PureComponent {
   static propTypes = {
@@ -213,7 +245,7 @@ export class ParticipantMessage extends PureComponent {
       }
       textContent = data.content.title;
     }
-    return <PlainTextMessage content={textContent}/>;
+    return <PlainTextMessage content={textContent} apiGatewayEndpoint={this.props.apiGatewayEndpoint}/>;
   }
 
   renderTransportError(error) {
@@ -243,10 +275,84 @@ export class ParticipantMessage extends PureComponent {
 }
 
 class PlainTextMessage extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoaded: false,
+      hasPreview: false,
+      previewData: {},
+      isError: false,
+      errorMessage: ''
+    }
+  }
+  componentDidMount() {
+    const API_URL = `${this.props.apiGatewayEndpoint}/getUrlPreview`;
+    const DATA = {
+      "message": this.props.content,
+      "options": {
+        "shouldValidateImagePreDownload": "false"
+      }
+    }
+    if (this.state.hasPreview === false && this.state.isLoaded === false) {
+      console.log("MAKING API CALL NOW to ", API_URL)
+      fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(DATA) })
+        .then(res => res.json())
+        .then(
+          (result) => {
+            console.log("Url Preview Response: ", result);
+            if (result[0].url) {
+              console.log("Setting state to - isloaded true and haspreview true");
+              this.setState({
+                isLoaded: true,
+                previewData: result,
+                hasPreview: true
+              });
+            }
+            else {
+              this.setState({
+                isLoaded: true,
+                hasPreview: false,
+                isError: true,
+                errorMessage: "result[0] not found"
+              });
+            }
+          },
+          (error) => {
+            console.log(error);
+            this.setState({
+              isLoaded: true,
+              hasPreview: false,
+              isError: true,
+              errorMessage: JSON.stringify(error)
+            });
+          }
+        );
+    }
+  }
+  componentWillUnmount() {
+    /* fix Warning: Can't perform a React state update on an unmounted component */
+    this.setState = (state, callback) => {
+      return;
+    };
+  }
   render() {
-    return (
-        <Linkify properties={{ target: "_blank" }}>{this.props.content}</Linkify>
-    );
+    if (this.state.isLoaded && this.state.hasPreview) {
+      let data = this.state.previewData[0];
+
+      return (
+        <React.Fragment>
+          <PreviewBody>
+            {data.image && <PreviewImage src={data.image} alt="Link Preview"></PreviewImage>}
+            <PreviewTitle href={data.url}>{data.title}</PreviewTitle>
+            <PreviewUrl href={data.url} properties={{ target: '_blank' }}>{data.shortUrl}</PreviewUrl>
+            {data.description && <PreviewDescription>{data.description}</PreviewDescription>}
+          </PreviewBody>
+        </React.Fragment>
+      );
+    }
+    else {
+      return <Linkify properties={{ target: '_blank' }}>{this.props.content}</Linkify>;
+    }
   }
 }
 

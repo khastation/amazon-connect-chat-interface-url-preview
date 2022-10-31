@@ -199,6 +199,7 @@ export default class Chat extends Component {
             contactId={chatSession.contactId}
             transcriptConfig={transcriptConfig}
             textInputRef={textInputRef}
+            apiGatewayEndpoint={this.props.apiGatewayEndpoint}
           />
           <ChatComposer
             contactStatus={this.state.contactStatus}
